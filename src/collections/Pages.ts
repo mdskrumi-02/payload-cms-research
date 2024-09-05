@@ -1,4 +1,4 @@
-import { CollectionConfig } from "payload/types";
+import { CollectionAfterChangeHook, CollectionConfig } from "payload/types";
 
 import { CollectionBeforeChangeHook } from "payload/types";
 
@@ -12,7 +12,7 @@ const beforeChangeHook: CollectionBeforeChangeHook = async ({
 }) => {
   console.log(data, req.locale, operation);
 
-  if (req.locale === "en") {
+  if (req.locale === "en" && operation === "update") {
     const payload = req.payload;
 
     for (let i = 0; i < locales.length; i++) {
@@ -24,6 +24,9 @@ const beforeChangeHook: CollectionBeforeChangeHook = async ({
         },
         locale: locales[i],
         depth: 2,
+        context: {
+          triggerAfterChange: false,
+        },
       });
 
       console.log({ result });
@@ -31,6 +34,35 @@ const beforeChangeHook: CollectionBeforeChangeHook = async ({
   }
 
   return data;
+};
+const afterChangeHook: CollectionAfterChangeHook = async ({
+  doc,
+  req,
+  operation,
+  previousDoc,
+}) => {
+  console.log(doc, req.locale, operation);
+
+  if (req.locale === "en" && operation === "update") {
+    const payload = req.payload;
+
+    for (let i = 0; i < locales.length; i++) {
+      const result = await payload.update({
+        collection: "pages",
+        id: previousDoc.id,
+        data: {
+          title: doc.title + " " + locales[i],
+        },
+        locale: locales[i],
+        depth: 2,
+        context: {
+          triggerAfterChange: false,
+        },
+      });
+
+      console.log({ result });
+    }
+  }
 };
 
 const Pages: CollectionConfig = {
@@ -49,7 +81,8 @@ const Pages: CollectionConfig = {
     },
   ],
   hooks: {
-    beforeChange: [beforeChangeHook],
+    // beforeChange: [beforeChangeHook],
+    afterChange: [afterChangeHook],
   },
 };
 

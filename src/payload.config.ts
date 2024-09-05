@@ -25,6 +25,7 @@ export default buildConfig({
   plugins: [payloadCloud()],
   db: mongooseAdapter({
     url: process.env.DATABASE_URI,
+    transactionOptions: false,
   }),
   localization: {
     locales: ["en", "es", "de"],
